@@ -34,6 +34,10 @@ app.logger.setLevel(logging.INFO)
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODELS_DIR, exist_ok=True)
 
+# 임시 파일 저장 경로 설정
+TEMP_DIR = os.path.join(os.path.dirname(__file__), "temp")
+os.makedirs(TEMP_DIR, exist_ok=True)
+
 # 모델 로딩 함수들 - 필요할 때만 로드하도록 지연 로딩 구현
 whisper_model = None
 tts_en_model = None
@@ -75,7 +79,7 @@ def stt_english():
     audio_file = request.files['file']
     
     # 임시 파일로 저장
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
     audio_file.save(temp_file.name)
     temp_file.close()
     
@@ -103,7 +107,7 @@ def stt_japanese():
     audio_file = request.files['file']
     
     # 임시 파일로 저장
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
     audio_file.save(temp_file.name)
     temp_file.close()
     
@@ -132,20 +136,32 @@ def tts_english():
     text = data['text']
     
     try:
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+        temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
         temp_file.close()
         
         # 영어 TTS 모델 사용
         model = get_tts_en_model()
         model.tts_to_file(text=text, file_path=temp_file.name)
         
-        return send_file(temp_file.name, as_attachment=True, download_name='output_en.wav')
+        response = send_file(temp_file.name, as_attachment=True, download_name='output_en.wav')
+        
+        # 응답 후크 추가
+        @response.call_on_close
+        def on_response_sent():
+            # 응답이 완전히 전송된 후 파일 삭제
+            if os.path.exists(temp_file.name):
+                try:
+                    os.unlink(temp_file.name)
+                    app.logger.info(f"임시 파일 삭제 성공: {temp_file.name}")
+                except Exception as e:
+                    app.logger.error(f"임시 파일 삭제 실패: {str(e)}")
+        
+        return response
     except Exception as e:
         app.logger.error(f"TTS Error: {str(e)}")
+        if os.path.exists(temp_file.name):
+            os.unlink(temp_file.name)
         return jsonify({'error': f'음성 변환 실패: {str(e)}'}), 500
-    finally:
-        # 이 부분은 send_file 후에 실행되므로 파일이 이미 전송된 후에 삭제됨
-        pass
 
 @app.route('/tts/japanese', methods=['POST'])
 def tts_japanese():
@@ -156,20 +172,32 @@ def tts_japanese():
     text = data['text']
     
     try:
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+        temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
         temp_file.close()
         
         # 일본어 TTS 모델 사용
         model = get_tts_ja_model()
         model.tts_to_file(text=text, file_path=temp_file.name)
         
-        return send_file(temp_file.name, as_attachment=True, download_name='output_ja.wav')
+        response = send_file(temp_file.name, as_attachment=True, download_name='output_ja.wav')
+        
+        # 응답 후크 추가
+        @response.call_on_close
+        def on_response_sent():
+            # 응답이 완전히 전송된 후 파일 삭제
+            if os.path.exists(temp_file.name):
+                try:
+                    os.unlink(temp_file.name)
+                    app.logger.info(f"임시 파일 삭제 성공: {temp_file.name}")
+                except Exception as e:
+                    app.logger.error(f"임시 파일 삭제 실패: {str(e)}")
+        
+        return response
     except Exception as e:
         app.logger.error(f"TTS Error: {str(e)}")
+        if os.path.exists(temp_file.name):
+            os.unlink(temp_file.name)
         return jsonify({'error': f'음성 변환 실패: {str(e)}'}), 500
-    finally:
-        # 이 부분은 send_file 후에 실행되므로 파일이 이미 전송된 후에 삭제됨
-        pass
 
 # 임시 파일 정리를 위한 경로
 @app.route('/cleanup', methods=['POST'])
@@ -182,6 +210,25 @@ def cleanup():
         except Exception as e:
             return jsonify({'error': str(e)})
     return jsonify({'success': False})
+
+# 주기적으로 오래된 임시 파일 정리 (1시간 이상 지난 파일)
+@app.route('/cleanup/temp', methods=['POST'])
+def cleanup_temp():
+    now = time.time()
+    count = 0
+    
+    for filename in os.listdir(TEMP_DIR):
+        file_path = os.path.join(TEMP_DIR, filename)
+        if os.path.isfile(file_path):
+            # 파일의 수정 시간이 1시간 이상 지났는지 확인
+            if now - os.path.getmtime(file_path) > 3600:  # 3600초 = 1시간
+                try:
+                    os.unlink(file_path)
+                    count += 1
+                except Exception as e:
+                    app.logger.error(f"임시 파일 정리 실패: {str(e)}")
+    
+    return jsonify({'success': True, 'deleted_files': count})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

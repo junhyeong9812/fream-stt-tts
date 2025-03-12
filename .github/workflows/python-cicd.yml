@@ -1,0 +1,45 @@
+name: CI/CD for STT-TTS Flask Server
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) Checkout
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      # 2) Login to GHCR
+      - name: Log in to GitHub Container Registry
+        run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      # 3) Docker build
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/junhyeong9812/fream-stt-tts:latest .
+
+      # 4) Docker push
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/junhyeong9812/fream-stt-tts:latest
+
+  deploy:
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: SSH to EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/fream-back/docker/prod
+            docker-compose -f docker-compose.prod.yml pull stt_tts
+            docker-compose -f docker-compose.prod.yml up -d stt_tts
