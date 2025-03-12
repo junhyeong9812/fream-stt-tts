@@ -1,5 +1,18 @@
-# flask==2.0.1
+flask==2.0.1
 pydub==0.25.1
 soundfile==0.12.1
 numpy==1.22.0
 torch==2.0.1
+# TTS[all]이 필요로 하는 의존성들
+gruut==2.2.3
+nltk==3.8.1
+scipy==1.10.1
+pandas==1.5.3
+pyyaml==6.0.1
+tqdm==4.66.1
+matplotlib==3.7.2
+Cython==0.29.34
+jamo==0.4.1
+bangla==0.0.2
+g2pkk==0.1.2
+trainer==0.0.36
