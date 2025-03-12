@@ -13,33 +13,23 @@ RUN apt-get update && apt-get install -y \
 RUN conda create -n tts python=3.9 -y
 SHELL ["conda", "run", "-n", "tts", "/bin/bash", "-c"]
 
-# 과학/데이터 관련 패키지는 conda로 설치
-RUN conda install -y -c conda-forge \
-    numpy=1.22.0 \
-    scipy=1.10.1 \
-    pandas=1.5.3 \
-    matplotlib=3.7.2 \
-    pyyaml=6.0.1 \
-    tqdm=4.66.1 \
-    cython=0.29.34 \
-    scikit-learn=1.0.2
+# 과학/데이터 관련 패키지는 conda로 설치 - 그룹으로 나누어 설치
+RUN conda install -y -c conda-forge numpy=1.22.0 && conda clean -afy
+RUN conda install -y -c conda-forge scipy=1.10.1 && conda clean -afy
+RUN conda install -y -c conda-forge pandas=1.5.3 && conda clean -afy
+RUN conda install -y -c conda-forge matplotlib=3.7.2 && conda clean -afy
+RUN conda install -y -c conda-forge pyyaml=6.0.1 tqdm=4.66.1 && conda clean -afy
+RUN conda install -y -c conda-forge cython=0.29.34 && conda clean -afy
+RUN conda install -y -c conda-forge scikit-learn=1.0.2 && conda clean -afy
 
 # PyTorch 설치
-RUN conda install -y -c pytorch \
-    pytorch=2.0.1 \
-    cpuonly
+RUN conda install -y -c pytorch pytorch=2.0.1 cpuonly && conda clean -afy
 
-# 나머지 패키지는 pip로 설치
-RUN pip install --upgrade pip && \
-    pip install flask==2.0.1 \
-    pydub==0.25.1 \
-    soundfile==0.12.1 \
-    gruut==2.2.3 \
-    nltk==3.8.1 \
-    jamo==0.4.1 \
-    bangla==0.0.2 \
-    g2pkk==0.1.2 \
-    trainer==0.0.36
+# 나머지 패키지는 pip로 설치 - 그룹으로 나누어 설치
+RUN pip install --upgrade pip
+RUN pip install flask==2.0.1 pydub==0.25.1 soundfile==0.12.1
+RUN pip install gruut==2.2.3 nltk==3.8.1
+RUN pip install jamo==0.4.1 bangla==0.0.2 g2pkk==0.1.2 trainer==0.0.36
 
 # Whisper와 TTS 설치
 RUN pip install openai-whisper==20231117
