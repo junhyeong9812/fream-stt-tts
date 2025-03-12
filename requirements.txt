@@ -16,3 +16,4 @@ jamo==0.4.1
 bangla==0.0.2
 g2pkk==0.1.2
 trainer==0.0.36
+scikit-learn==1.0.2

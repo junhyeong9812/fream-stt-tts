@@ -14,13 +14,16 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# pip 업그레이드
+RUN pip install --upgrade pip
+
 # 기본 종속성 먼저 설치
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 이미 의존성을 모두 설치했으므로 Whisper와 TTS 설치는 더 간단해집니다
 RUN pip install --no-cache-dir openai-whisper==20231117
-RUN pip install --no-cache-dir TTS==0.17.0
+RUN pip install --no-cache-dir "TTS[torch]==0.17.0"
 
 # 애플리케이션 파일 복사
 COPY app.py .
