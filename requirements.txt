@@ -1,7 +1,5 @@
-flask==2.0.1
-openai-whisper==20231117
-TTS[all]==0.17.0
+# flask==2.0.1
 pydub==0.25.1
 soundfile==0.12.1
+numpy==1.22.0
 torch==2.0.1
-# numpy==1.24.3
