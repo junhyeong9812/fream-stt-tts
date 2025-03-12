@@ -4,4 +4,4 @@ TTS[all]==0.17.0
 pydub==0.25.1
 soundfile==0.12.1
 torch==2.0.1
-numpy==1.24.3
+# numpy==1.24.3
