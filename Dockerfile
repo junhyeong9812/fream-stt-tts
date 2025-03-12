@@ -2,8 +2,17 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# ffmpeg 설치
-RUN apt-get update && apt-get install -y ffmpeg cron && apt-get clean
+# 컴파일러 및 필요한 라이브러리 설치
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    build-essential \
+    gfortran \
+    libatlas-base-dev \
+    liblapack-dev \
+    libblas-dev \
+    libopenblas-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # 종속성 파일 복사 및 설치
 COPY requirements.txt .
@@ -17,15 +26,8 @@ COPY templates/ templates/
 RUN mkdir -p models temp
 RUN chmod 777 temp  # 임시 디렉토리에 쓰기 권한 부여
 
-# 크론 작업 설정 - 매시간 임시 파일 정리
-COPY cleanup_cron /etc/cron.d/cleanup_cron
-RUN chmod 0644 /etc/cron.d/cleanup_cron
-RUN crontab /etc/cron.d/cleanup_cron
-
 # 포트 노출
 EXPOSE 5000
 
-# 애플리케이션 실행 (+ cron 실행)
-COPY start.sh .
-RUN chmod +x start.sh
-CMD ["./start.sh"]
+# 애플리케이션 실행
+CMD ["python", "app.py"]
