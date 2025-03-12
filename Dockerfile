@@ -6,11 +6,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     build-essential \
-    gfortran \
-    libatlas-base-dev \
-    liblapack-dev \
-    libblas-dev \
-    libopenblas-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,13 +13,37 @@ RUN apt-get update && apt-get install -y \
 RUN conda create -n tts python=3.9 -y
 SHELL ["conda", "run", "-n", "tts", "/bin/bash", "-c"]
 
-# Conda 환경에 기본 패키지 설치
-COPY requirements.txt .
-RUN conda install -y -c conda-forge scikit-learn=1.0.2 numpy=1.22.0 && \
-    pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install openai-whisper==20231117 && \
-    pip install TTS==0.16.0
+# 과학/데이터 관련 패키지는 conda로 설치
+RUN conda install -y -c conda-forge \
+    numpy=1.22.0 \
+    scipy=1.10.1 \
+    pandas=1.5.3 \
+    matplotlib=3.7.2 \
+    pyyaml=6.0.1 \
+    tqdm=4.66.1 \
+    cython=0.29.34 \
+    scikit-learn=1.0.2
+
+# PyTorch 설치
+RUN conda install -y -c pytorch \
+    pytorch=2.0.1 \
+    cpuonly
+
+# 나머지 패키지는 pip로 설치
+RUN pip install --upgrade pip && \
+    pip install flask==2.0.1 \
+    pydub==0.25.1 \
+    soundfile==0.12.1 \
+    gruut==2.2.3 \
+    nltk==3.8.1 \
+    jamo==0.4.1 \
+    bangla==0.0.2 \
+    g2pkk==0.1.2 \
+    trainer==0.0.36
+
+# Whisper와 TTS 설치
+RUN pip install openai-whisper==20231117
+RUN pip install TTS==0.16.0
 
 # 애플리케이션 파일 복사
 COPY app.py .
