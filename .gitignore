@@ -70,3 +70,5 @@ models/
 .DS_Store
 
 temp/
+
+*.tar
