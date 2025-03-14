@@ -1,5 +1,6 @@
 # 가상 환경
 venv/
+venv_py311/
 env/
 ENV/
 .env
@@ -67,3 +68,5 @@ models/
 *.swp
 *.swo
 .DS_Store
+
+temp/

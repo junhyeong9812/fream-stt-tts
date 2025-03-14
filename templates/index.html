@@ -1,196 +1,670 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STT & TTS 서비스</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>언어 학습 도우미 - STT, TTS, GPT 대화</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+      body {
+        font-family: "Noto Sans KR", Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #333;
+        background-color: #f9f9f9;
+      }
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .section {
+        flex: 1;
+        min-width: 300px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      h2 {
+        color: #3498db;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-top: 0;
+      }
+      h3 {
+        color: #555;
+        margin-top: 20px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-size: 14px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        font-family: inherit;
+      }
+      select {
+        padding: 8px;
+        margin-top: 10px;
+        width: 100%;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      .audio-player {
+        margin-top: 10px;
+        width: 100%;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .result-container {
+        margin-top: 15px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .vocabulary-section {
+        margin-top: 20px;
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+      .loading:after {
+        content: "처리 중";
+        animation: dots 1.5s steps(5, end) infinite;
+      }
+      @keyframes dots {
+        0%,
+        20% {
+          content: "처리 중";
         }
-        .container {
-            display: flex;
-            gap: 20px;
+        40% {
+          content: "처리 중.";
         }
-        .section {
-            flex: 1;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        60% {
+          content: "처리 중..";
         }
-        button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
+        80%,
+        100% {
+          content: "처리 중...";
         }
-        button:hover {
-            background-color: #45a049;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-top: 10px;
-        }
-        select {
-            padding: 8px;
-            margin-top: 10px;
-        }
-        .audio-player {
-            margin-top: 10px;
-            width: 100%;
-        }
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #eee;
+        border: 1px solid #ddd;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        margin-right: 5px;
+      }
+      .tab.active {
+        background-color: #fff;
+        border-bottom: 1px solid #fff;
+        margin-bottom: -1px;
+        font-weight: bold;
+        color: #3498db;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
     </style>
-</head>
-<body>
-    <h1>STT & TTS 서비스</h1>
-    
-    <div class="container">
+  </head>
+  <body>
+    <h1>언어 학습 도우미</h1>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('stt-tts')">STT & TTS</div>
+      <div class="tab" onclick="showTab('conversation')">대화 학습</div>
+      <div class="tab" onclick="showTab('full-conversation')">통합 대화</div>
+    </div>
+
+    <div id="stt-tts" class="tab-content active">
+      <div class="container">
         <div class="section">
-            <h2>음성 → 텍스트 (STT)</h2>
-            <select id="stt-language">
-                <option value="english">영어</option>
-                <option value="japanese">일본어</option>
-            </select>
-            <div>
-                <button id="record-button">녹음 시작</button>
-                <button id="stop-button" disabled>녹음 중지</button>
-            </div>
-            <p>또는 파일 업로드:</p>
-            <input type="file" id="audio-file" accept="audio/*">
-            <button id="upload-button">파일 업로드</button>
-            <div>
-                <h3>인식 결과:</h3>
-                <textarea id="stt-result" readonly></textarea>
-            </div>
+          <h2>음성 → 텍스트 (STT)</h2>
+          <select id="stt-language">
+            <option value="english">영어</option>
+            <option value="japanese">일본어</option>
+          </select>
+          <div class="controls">
+            <button id="record-button">녹음 시작</button>
+            <button id="stop-button" disabled>녹음 중지</button>
+          </div>
+          <p>또는 파일 업로드:</p>
+          <input type="file" id="audio-file" accept="audio/*" />
+          <button id="upload-button">파일 업로드</button>
+          <div>
+            <h3>인식 결과:</h3>
+            <textarea id="stt-result" readonly></textarea>
+          </div>
         </div>
-        
+
         <div class="section">
-            <h2>텍스트 → 음성 (TTS)</h2>
-            <select id="tts-language">
-                <option value="english">영어</option>
-                <option value="japanese">일본어</option>
-            </select>
-            <div>
-                <textarea id="tts-text" placeholder="변환할 텍스트를 입력하세요..."></textarea>
-                <button id="convert-button">음성 변환</button>
-            </div>
-            <div>
-                <h3>변환 결과:</h3>
-                <audio id="tts-audio" controls class="audio-player"></audio>
-            </div>
+          <h2>텍스트 → 음성 (TTS)</h2>
+          <select id="tts-language">
+            <option value="english">영어</option>
+            <option value="japanese">일본어</option>
+          </select>
+          <div>
+            <textarea
+              id="tts-text"
+              placeholder="변환할 텍스트를 입력하세요..."
+            ></textarea>
+            <button id="convert-button">음성 변환</button>
+          </div>
+          <div>
+            <h3>변환 결과:</h3>
+            <audio id="tts-audio" controls class="audio-player"></audio>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <div id="conversation" class="tab-content">
+      <div class="container">
+        <div class="section">
+          <h2>텍스트 대화</h2>
+          <select id="chat-language">
+            <option value="english">영어</option>
+            <option value="japanese">일본어</option>
+          </select>
+          <div>
+            <textarea
+              id="chat-input"
+              placeholder="대화할 내용을 입력하세요..."
+            ></textarea>
+            <button id="chat-button">대화 시작</button>
+          </div>
+          <div id="loading-chat" class="loading"></div>
+          <div>
+            <h3>대화 응답:</h3>
+            <div id="chat-response" class="result-container"></div>
+
+            <h3>어휘 학습:</h3>
+            <div id="vocabulary" class="vocabulary-section"></div>
+
+            <div>
+              <h3>TTS로 듣기:</h3>
+              <button id="chat-tts-button">응답 듣기</button>
+              <audio id="chat-audio" controls class="audio-player"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="full-conversation" class="tab-content">
+      <div class="container">
+        <div class="section">
+          <h2>음성 대화 (STT → GPT → TTS)</h2>
+          <select id="full-language">
+            <option value="english">영어</option>
+            <option value="japanese">일본어</option>
+          </select>
+          <div class="controls">
+            <button id="full-record-button">녹음 시작</button>
+            <button id="full-stop-button" disabled>녹음 중지</button>
+          </div>
+          <p>또는 파일 업로드:</p>
+          <input type="file" id="full-audio-file" accept="audio/*" />
+          <button id="full-upload-button">파일 업로드 및 대화</button>
+          <div id="loading-full" class="loading"></div>
+          <div>
+            <h3>인식된 텍스트:</h3>
+            <div id="full-input-text" class="result-container"></div>
+
+            <h3>대화 응답:</h3>
+            <div id="full-response" class="result-container"></div>
+
+            <h3>어휘 학습:</h3>
+            <div id="full-vocabulary" class="vocabulary-section"></div>
+
+            <div>
+              <h3>TTS로 듣기:</h3>
+              <button id="full-tts-button">응답 듣기</button>
+              <audio id="full-audio" controls class="audio-player"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-        
-        // 녹음 시작
-        document.getElementById('record-button').addEventListener('click', async () => {
-            audioChunks = [];
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = (e) => {
-                audioChunks.push(e.data);
-            };
-            
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                sendAudioToServer(audioBlob);
-            };
-            
-            mediaRecorder.start();
-            document.getElementById('record-button').disabled = true;
-            document.getElementById('stop-button').disabled = false;
+      // 탭 관리
+      function showTab(tabId) {
+        // 모든 탭 콘텐츠를 숨김
+        document.querySelectorAll(".tab-content").forEach((tab) => {
+          tab.classList.remove("active");
         });
-        
-        // 녹음 중지
-        document.getElementById('stop-button').addEventListener('click', () => {
-            mediaRecorder.stop();
-            document.getElementById('record-button').disabled = false;
-            document.getElementById('stop-button').disabled = true;
+
+        // 모든 탭 버튼을 비활성화
+        document.querySelectorAll(".tab").forEach((button) => {
+          button.classList.remove("active");
         });
-        
-        // 파일 업로드
-        document.getElementById('upload-button').addEventListener('click', () => {
-            const fileInput = document.getElementById('audio-file');
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                sendAudioToServer(file);
-            } else {
-                alert('파일을 선택해주세요.');
-            }
+
+        // 선택된 탭 콘텐츠를 표시
+        document.getElementById(tabId).classList.add("active");
+
+        // 선택된 탭 버튼을 활성화
+        Array.from(document.querySelectorAll(".tab"))
+          .find((tab) => tab.textContent.includes(tabId.split("-")[0]))
+          .classList.add("active");
+      }
+
+      // STT & TTS 기능 구현
+      let mediaRecorder;
+      let audioChunks = [];
+
+      // 녹음 시작
+      document
+        .getElementById("record-button")
+        .addEventListener("click", async () => {
+          audioChunks = [];
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (e) => {
+            audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            sendAudioToServer(audioBlob);
+          };
+
+          mediaRecorder.start();
+          document.getElementById("record-button").disabled = true;
+          document.getElementById("stop-button").disabled = false;
         });
-        
-        // 오디오 서버로 전송 (STT)
-        function sendAudioToServer(audioBlob) {
-            const formData = new FormData();
-            formData.append('file', audioBlob);
-            
-            const language = document.getElementById('stt-language').value;
-            const endpoint = `/talk/stt/${language}`;
-            
-            document.getElementById('stt-result').value = "처리 중...";
-            
-            fetch(endpoint, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById('stt-result').value = `오류: ${data.error}`;
-                } else {
-                    document.getElementById('stt-result').value = data.text;
-                }
-            })
-            .catch(error => {
-                document.getElementById('stt-result').value = `오류: ${error}`;
-            });
+
+      // 녹음 중지
+      document.getElementById("stop-button").addEventListener("click", () => {
+        mediaRecorder.stop();
+        document.getElementById("record-button").disabled = false;
+        document.getElementById("stop-button").disabled = true;
+      });
+
+      // 파일 업로드
+      document.getElementById("upload-button").addEventListener("click", () => {
+        const fileInput = document.getElementById("audio-file");
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          sendAudioToServer(file);
+        } else {
+          alert("파일을 선택해주세요.");
         }
-        
-        // 텍스트 변환 (TTS)
-        document.getElementById('convert-button').addEventListener('click', () => {
-            const text = document.getElementById('tts-text').value;
-            if (!text) {
-                alert('텍스트를 입력해주세요.');
-                return;
+      });
+
+      // 오디오 서버로 전송 (STT)
+      function sendAudioToServer(audioBlob) {
+        const formData = new FormData();
+        formData.append("file", audioBlob);
+
+        const language = document.getElementById("stt-language").value;
+        const endpoint = `/stt/${language}`;
+
+        document.getElementById("stt-result").value = "처리 중...";
+
+        fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              document.getElementById(
+                "stt-result"
+              ).value = `오류: ${data.error}`;
+            } else {
+              document.getElementById("stt-result").value = data.text;
             }
-            
-            const language = document.getElementById('tts-language').value;
-            const endpoint = `/talk/tts/${language}`;
-            
-            fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text })
+          })
+          .catch((error) => {
+            document.getElementById("stt-result").value = `오류: ${error}`;
+          });
+      }
+
+      // 텍스트 변환 (TTS)
+      document
+        .getElementById("convert-button")
+        .addEventListener("click", () => {
+          const text = document.getElementById("tts-text").value;
+          if (!text) {
+            alert("텍스트를 입력해주세요.");
+            return;
+          }
+
+          const language = document.getElementById("tts-language").value;
+          const endpoint = `/tts/${language}`;
+
+          fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("음성 변환에 실패했습니다.");
+              }
+              return response.blob();
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('음성 변환에 실패했습니다.');
-                }
-                return response.blob();
+            .then((blob) => {
+              const audioUrl = URL.createObjectURL(blob);
+              const audioPlayer = document.getElementById("tts-audio");
+              audioPlayer.src = audioUrl;
+              audioPlayer.style.display = "block";
             })
-            .then(blob => {
-                const audioUrl = URL.createObjectURL(blob);
-                const audioPlayer = document.getElementById('tts-audio');
-                audioPlayer.src = audioUrl;
-                audioPlayer.style.display = 'block';
+            .catch((error) => {
+              alert(`오류: ${error.message}`);
+            });
+        });
+
+      // 텍스트 대화 기능 구현
+      document.getElementById("chat-button").addEventListener("click", () => {
+        const text = document.getElementById("chat-input").value;
+        if (!text) {
+          alert("대화할 내용을 입력해주세요.");
+          return;
+        }
+
+        const language = document.getElementById("chat-language").value;
+        const endpoint = `/chat/${language}`;
+
+        document.getElementById("loading-chat").style.display = "block";
+        document.getElementById("chat-response").innerHTML = "";
+        document.getElementById("vocabulary").innerHTML = "";
+
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("loading-chat").style.display = "none";
+
+            if (data.error) {
+              document.getElementById(
+                "chat-response"
+              ).innerHTML = `<p class="error">오류: ${data.error}</p>`;
+            } else {
+              // 대화 응답 표시
+              document.getElementById(
+                "chat-response"
+              ).innerHTML = `<p>${data.conversation.replace(
+                /\n/g,
+                "<br>"
+              )}</p>`;
+
+              // 어휘 학습 표시
+              if (data.vocabulary) {
+                document.getElementById(
+                  "vocabulary"
+                ).innerHTML = `<p>${data.vocabulary.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("vocabulary").innerHTML =
+                  "<p>어휘 정보가 없습니다.</p>";
+              }
+            }
+          })
+          .catch((error) => {
+            document.getElementById("loading-chat").style.display = "none";
+            document.getElementById(
+              "chat-response"
+            ).innerHTML = `<p class="error">오류: ${error.message}</p>`;
+          });
+      });
+
+      // 대화 응답 TTS 변환 - 수정된 부분
+      document
+        .getElementById("chat-tts-button")
+        .addEventListener("click", () => {
+          const text = document
+            .getElementById("chat-response")
+            .innerText.trim();
+
+          if (!text || text.includes("오류:")) {
+            alert("변환할 대화 응답이 없습니다.");
+            return;
+          }
+
+          const language = document.getElementById("chat-language").value;
+          // 기존 TTS 엔드포인트 사용
+          const endpoint = `/tts/${language}`;
+
+          fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("음성 변환에 실패했습니다.");
+              }
+              return response.blob();
             })
-            .catch(error => {
-                alert(`오류: ${error.message}`);
+            .then((blob) => {
+              const audioUrl = URL.createObjectURL(blob);
+              const audioPlayer = document.getElementById("chat-audio");
+              audioPlayer.src = audioUrl;
+              audioPlayer.style.display = "block";
+            })
+            .catch((error) => {
+              alert(`오류: ${error.message}`);
+            });
+        });
+
+      // 통합 대화 기능 (음성 → GPT → TTS)
+
+      // 통합 대화 녹음 변수
+      let fullMediaRecorder;
+      let fullAudioChunks = [];
+
+      // 녹음 시작
+      document
+        .getElementById("full-record-button")
+        .addEventListener("click", async () => {
+          fullAudioChunks = [];
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          fullMediaRecorder = new MediaRecorder(stream);
+
+          fullMediaRecorder.ondataavailable = (e) => {
+            fullAudioChunks.push(e.data);
+          };
+
+          fullMediaRecorder.onstop = () => {
+            const audioBlob = new Blob(fullAudioChunks, { type: "audio/wav" });
+            sendFullConversation(audioBlob);
+          };
+
+          fullMediaRecorder.start();
+          document.getElementById("full-record-button").disabled = true;
+          document.getElementById("full-stop-button").disabled = false;
+        });
+
+      // 녹음 중지
+      document
+        .getElementById("full-stop-button")
+        .addEventListener("click", () => {
+          fullMediaRecorder.stop();
+          document.getElementById("full-record-button").disabled = false;
+          document.getElementById("full-stop-button").disabled = true;
+        });
+
+      // 파일 업로드 및 대화
+      document
+        .getElementById("full-upload-button")
+        .addEventListener("click", () => {
+          const fileInput = document.getElementById("full-audio-file");
+          if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            sendFullConversation(file);
+          } else {
+            alert("파일을 선택해주세요.");
+          }
+        });
+
+      // 통합 대화 처리
+      function sendFullConversation(audioBlob) {
+        const formData = new FormData();
+        formData.append("file", audioBlob);
+
+        const language = document.getElementById("full-language").value;
+        const endpoint = `/stt-chat/${language}`;
+
+        document.getElementById("loading-full").style.display = "block";
+        document.getElementById("full-input-text").innerHTML = "";
+        document.getElementById("full-response").innerHTML = "";
+        document.getElementById("full-vocabulary").innerHTML = "";
+
+        fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("loading-full").style.display = "none";
+
+            if (data.error) {
+              document.getElementById(
+                "full-input-text"
+              ).innerHTML = `<p class="error">오류: ${data.error}</p>`;
+            } else {
+              // 인식된 텍스트 표시
+              document.getElementById(
+                "full-input-text"
+              ).innerHTML = `<p>${data.input_text}</p>`;
+
+              // 대화 응답 표시
+              document.getElementById(
+                "full-response"
+              ).innerHTML = `<p>${data.conversation.replace(
+                /\n/g,
+                "<br>"
+              )}</p>`;
+
+              // 어휘 학습 표시
+              if (data.vocabulary) {
+                document.getElementById(
+                  "full-vocabulary"
+                ).innerHTML = `<p>${data.vocabulary.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("full-vocabulary").innerHTML =
+                  "<p>어휘 정보가 없습니다.</p>";
+              }
+
+              // TTS 응답 듣기 버튼 활성화
+              document.getElementById("full-tts-button").disabled = false;
+            }
+          })
+          .catch((error) => {
+            document.getElementById("loading-full").style.display = "none";
+            document.getElementById(
+              "full-input-text"
+            ).innerHTML = `<p class="error">오류: ${error.message}</p>`;
+          });
+      }
+
+      // 통합 대화 응답 TTS 변환 - 수정된 부분
+      document
+        .getElementById("full-tts-button")
+        .addEventListener("click", () => {
+          const text = document
+            .getElementById("full-response")
+            .innerText.trim();
+
+          if (!text || text.includes("오류:")) {
+            alert("변환할 대화 응답이 없습니다.");
+            return;
+          }
+
+          const language = document.getElementById("full-language").value;
+          // 기존 TTS 엔드포인트 사용
+          const endpoint = `/tts/${language}`;
+
+          fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("음성 변환에 실패했습니다.");
+              }
+              return response.blob();
+            })
+            .then((blob) => {
+              const audioUrl = URL.createObjectURL(blob);
+              const audioPlayer = document.getElementById("full-audio");
+              audioPlayer.src = audioUrl;
+              audioPlayer.style.display = "block";
+            })
+            .catch((error) => {
+              alert(`오류: ${error.message}`);
             });
         });
     </script>
-</body>
+  </body>
 </html>
