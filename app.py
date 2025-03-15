@@ -5,6 +5,7 @@ import torch.serialization
 from TTS.utils.radam import RAdam
 from TTS.api import TTS
 from collections import defaultdict, OrderedDict
+from waitress import serve
 import builtins
 
 # torch.load 함수를 오버라이드하여 항상 weights_only=False로 설정
@@ -491,5 +492,15 @@ def cleanup_temp():
     
     return jsonify({'success': True, 'deleted_files': count})
 
+# 플라스크 활용 시 활성화
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=5000, debug=True)
+
+# Gunicorn 활용 시 (Unix/Linux환경)
+# gunicorn -w 4 --threads 8 -b 0.0.0.0:5000 app:app
+# 위 명령어로 실행 
+
+# Waitress 활용(window) ==>멀티스레드 환경 제공
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print("Starting Waitress server...")
+    serve(app, host="0.0.0.0", port=5000, threads=8)
