@@ -100,6 +100,12 @@
         padding: 15px;
         border-radius: 4px;
       }
+      .example-responses {
+        margin-top: 20px;
+        background-color: #e8f4f8;
+        padding: 15px;
+        border-radius: 4px;
+      }
       .loading {
         display: none;
         text-align: center;
@@ -151,6 +157,110 @@
       .tab-content.active {
         display: block;
       }
+
+      /* 채팅 인터페이스 스타일 */
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 500px;
+        max-height: 70vh;
+      }
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+      }
+      .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+      }
+      .message-user {
+        margin-left: auto;
+        background-color: #dcf8c6;
+        padding: 10px;
+        border-radius: 10px 10px 0 10px;
+      }
+      .message-assistant {
+        margin-right: auto;
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 10px 10px 10px 0;
+      }
+      .chat-input-container {
+        display: flex;
+        gap: 10px;
+      }
+      .chat-input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        height: 48px;
+      }
+      .input-type-toggle {
+        display: flex;
+        margin-bottom: 10px;
+      }
+      .input-type-toggle button {
+        flex: 1;
+        border-radius: 0;
+        margin-top: 0;
+      }
+      .input-type-toggle button:first-child {
+        border-radius: 4px 0 0 4px;
+      }
+      .input-type-toggle button:last-child {
+        border-radius: 0 4px 4px 0;
+      }
+      .input-type-toggle button.active {
+        background-color: #3498db;
+      }
+      .message-content {
+        margin-bottom: 5px;
+      }
+      .message-meta {
+        font-size: 12px;
+        color: #666;
+        text-align: right;
+      }
+      .chat-input-area {
+        margin-top: 10px;
+      }
+      .additional-content {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+      }
+      .toggle-details {
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-top: 10px;
+        cursor: pointer;
+      }
+      .details-content {
+        display: none;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+      }
+      .toggle-details.active + .details-content {
+        display: block;
+      }
+      .toggle-details:after {
+        content: "▼";
+        float: right;
+      }
+      .toggle-details.active:after {
+        content: "▲";
+      }
     </style>
   </head>
   <body>
@@ -159,7 +269,8 @@
     <div class="tabs">
       <div class="tab active" onclick="showTab('stt-tts')">STT & TTS</div>
       <div class="tab" onclick="showTab('conversation')">대화 학습</div>
-      <div class="tab" onclick="showTab('full-conversation')">통합 대화</div>
+      <div class="tab" onclick="showTab('speech')">음성 대화</div>
+      <div class="tab" onclick="showTab('chat')">통합 채팅</div>
     </div>
 
     <div id="stt-tts" class="tab-content active">
@@ -227,6 +338,9 @@
             <h3>어휘 학습:</h3>
             <div id="vocabulary" class="vocabulary-section"></div>
 
+            <h3>예시 응답:</h3>
+            <div id="example-responses" class="example-responses"></div>
+
             <div>
               <h3>TTS로 듣기:</h3>
               <button id="chat-tts-button">응답 듣기</button>
@@ -237,7 +351,7 @@
       </div>
     </div>
 
-    <div id="full-conversation" class="tab-content">
+    <div id="speech" class="tab-content">
       <div class="container">
         <div class="section">
           <h2>음성 대화 (STT → GPT → TTS)</h2>
@@ -263,10 +377,111 @@
             <h3>어휘 학습:</h3>
             <div id="full-vocabulary" class="vocabulary-section"></div>
 
+            <h3>예시 응답:</h3>
+            <div id="full-example-responses" class="example-responses"></div>
+
             <div>
               <h3>TTS로 듣기:</h3>
               <button id="full-tts-button">응답 듣기</button>
               <audio id="full-audio" controls class="audio-player"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat" class="tab-content">
+      <div class="container">
+        <div class="section">
+          <h2>통합 채팅</h2>
+          <div class="chat-container">
+            <div class="chat-messages" id="integrated-chat-messages">
+              <!-- 채팅 메시지가 여기에 추가됨 -->
+              <div class="message message-assistant">
+                <div class="message-content">
+                  안녕하세요! 저는 언어 학습을 도와주는 AI 어시스턴트입니다.
+                  영어 또는 일본어로 대화해 보세요.
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-input-area">
+              <div class="input-type-toggle">
+                <button
+                  id="text-input-toggle"
+                  class="active"
+                  onclick="toggleInputType('text')"
+                >
+                  텍스트
+                </button>
+                <button
+                  id="voice-input-toggle"
+                  onclick="toggleInputType('voice')"
+                >
+                  음성
+                </button>
+              </div>
+
+              <select id="integrated-chat-language">
+                <option value="english">영어</option>
+                <option value="japanese">일본어</option>
+              </select>
+
+              <div id="text-input-area">
+                <div class="chat-input-container">
+                  <input
+                    type="text"
+                    id="integrated-chat-input"
+                    class="chat-input"
+                    placeholder="메시지를 입력하세요..."
+                  />
+                  <button id="integrated-chat-submit">전송</button>
+                </div>
+              </div>
+
+              <div id="voice-input-area" style="display: none">
+                <div class="controls">
+                  <button id="integrated-record-button">녹음 시작</button>
+                  <button id="integrated-stop-button" disabled>
+                    녹음 중지
+                  </button>
+                  <span id="recording-status"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="integrated-loading" class="loading"></div>
+
+          <div class="additional-content">
+            <div id="latest-response-details">
+              <div class="toggle-details" onclick="toggleDetails(this)">
+                어휘 학습 (클릭하여 펼치기)
+              </div>
+              <div class="details-content" id="integrated-vocabulary">
+                <!-- 어휘 학습 내용이 여기에 추가됨 -->
+                <p>대화를 시작하면 어휘 학습이 여기에 표시됩니다.</p>
+              </div>
+
+              <div class="toggle-details" onclick="toggleDetails(this)">
+                예시 응답 (클릭하여 펼치기)
+              </div>
+              <div class="details-content" id="integrated-examples">
+                <!-- 예시 응답 내용이 여기에 추가됨 -->
+                <p>대화를 시작하면 예시 응답이 여기에 표시됩니다.</p>
+              </div>
+            </div>
+
+            <div>
+              <h3>최근 응답 듣기:</h3>
+              <button id="integrated-tts-button" disabled>
+                최근 응답 듣기
+              </button>
+              <audio
+                id="integrated-audio"
+                controls
+                class="audio-player"
+              ></audio>
             </div>
           </div>
         </div>
@@ -291,8 +506,32 @@
 
         // 선택된 탭 버튼을 활성화
         Array.from(document.querySelectorAll(".tab"))
-          .find((tab) => tab.textContent.includes(tabId.split("-")[0]))
+          .find((tab) => tab.textContent.includes(tabId))
           .classList.add("active");
+      }
+
+      // 토글 상세 정보 (어휘, 예시 등)
+      function toggleDetails(element) {
+        element.classList.toggle("active");
+      }
+
+      // 입력 유형 전환 (텍스트 또는 음성)
+      function toggleInputType(type) {
+        if (type === "text") {
+          document.getElementById("text-input-toggle").classList.add("active");
+          document
+            .getElementById("voice-input-toggle")
+            .classList.remove("active");
+          document.getElementById("text-input-area").style.display = "block";
+          document.getElementById("voice-input-area").style.display = "none";
+        } else {
+          document
+            .getElementById("text-input-toggle")
+            .classList.remove("active");
+          document.getElementById("voice-input-toggle").classList.add("active");
+          document.getElementById("text-input-area").style.display = "none";
+          document.getElementById("voice-input-area").style.display = "block";
+        }
       }
 
       // STT & TTS 기능 구현
@@ -416,11 +655,12 @@
         }
 
         const language = document.getElementById("chat-language").value;
-        const endpoint = `/chat/${language}`;
+        const endpoint = `/chat-extended/${language}`;
 
         document.getElementById("loading-chat").style.display = "block";
         document.getElementById("chat-response").innerHTML = "";
         document.getElementById("vocabulary").innerHTML = "";
+        document.getElementById("example-responses").innerHTML = "";
 
         fetch(endpoint, {
           method: "POST",
@@ -458,6 +698,19 @@
                 document.getElementById("vocabulary").innerHTML =
                   "<p>어휘 정보가 없습니다.</p>";
               }
+
+              // 예시 응답 표시
+              if (data.example_responses) {
+                document.getElementById(
+                  "example-responses"
+                ).innerHTML = `<p>${data.example_responses.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("example-responses").innerHTML =
+                  "<p>예시 응답이 없습니다.</p>";
+              }
             }
           })
           .catch((error) => {
@@ -468,7 +721,7 @@
           });
       });
 
-      // 대화 응답 TTS 변환 - 수정된 부분
+      // 대화 응답 TTS 변환
       document
         .getElementById("chat-tts-button")
         .addEventListener("click", () => {
@@ -482,7 +735,6 @@
           }
 
           const language = document.getElementById("chat-language").value;
-          // 기존 TTS 엔드포인트 사용
           const endpoint = `/tts/${language}`;
 
           fetch(endpoint, {
@@ -509,9 +761,9 @@
             });
         });
 
-      // 통합 대화 기능 (음성 → GPT → TTS)
+      // 음성 대화 기능 (STT → GPT → TTS)
 
-      // 통합 대화 녹음 변수
+      // 음성 대화 녹음 변수
       let fullMediaRecorder;
       let fullAudioChunks = [];
 
@@ -561,18 +813,19 @@
           }
         });
 
-      // 통합 대화 처리
+      // 음성 대화 처리
       function sendFullConversation(audioBlob) {
         const formData = new FormData();
         formData.append("file", audioBlob);
 
         const language = document.getElementById("full-language").value;
-        const endpoint = `/stt-chat/${language}`;
+        const endpoint = `/stt-chat-extended/${language}`;
 
         document.getElementById("loading-full").style.display = "block";
         document.getElementById("full-input-text").innerHTML = "";
         document.getElementById("full-response").innerHTML = "";
         document.getElementById("full-vocabulary").innerHTML = "";
+        document.getElementById("full-example-responses").innerHTML = "";
 
         fetch(endpoint, {
           method: "POST",
@@ -613,6 +866,19 @@
                   "<p>어휘 정보가 없습니다.</p>";
               }
 
+              // 예시 응답 표시
+              if (data.example_responses) {
+                document.getElementById(
+                  "full-example-responses"
+                ).innerHTML = `<p>${data.example_responses.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("full-example-responses").innerHTML =
+                  "<p>예시 응답이 없습니다.</p>";
+              }
+
               // TTS 응답 듣기 버튼 활성화
               document.getElementById("full-tts-button").disabled = false;
             }
@@ -625,7 +891,7 @@
           });
       }
 
-      // 통합 대화 응답 TTS 변환 - 수정된 부분
+      // 음성 대화 응답 TTS 변환
       document
         .getElementById("full-tts-button")
         .addEventListener("click", () => {
@@ -639,7 +905,6 @@
           }
 
           const language = document.getElementById("full-language").value;
-          // 기존 TTS 엔드포인트 사용
           const endpoint = `/tts/${language}`;
 
           fetch(endpoint, {
@@ -660,6 +925,315 @@
               const audioPlayer = document.getElementById("full-audio");
               audioPlayer.src = audioUrl;
               audioPlayer.style.display = "block";
+            })
+            .catch((error) => {
+              alert(`오류: ${error.message}`);
+            });
+        });
+
+      // 통합 채팅 기능 구현
+      let chatHistory = [];
+      let integratedMediaRecorder;
+      let integratedAudioChunks = [];
+
+      // 텍스트 메시지 전송
+      document
+        .getElementById("integrated-chat-submit")
+        .addEventListener("click", () => {
+          const input = document.getElementById("integrated-chat-input");
+          const text = input.value.trim();
+
+          if (!text) {
+            alert("메시지를 입력해주세요.");
+            return;
+          }
+
+          // 사용자 메시지를 채팅창에 추가
+          addMessageToChat("user", text);
+
+          // 입력창 비우기
+          input.value = "";
+
+          // 대화 요청 전송
+          sendChatRequest(text);
+        });
+
+      // 엔터 키로 메시지 전송
+      document
+        .getElementById("integrated-chat-input")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("integrated-chat-submit").click();
+          }
+        });
+
+      // 통합 채팅 녹음 시작
+      document
+        .getElementById("integrated-record-button")
+        .addEventListener("click", async () => {
+          integratedAudioChunks = [];
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          integratedMediaRecorder = new MediaRecorder(stream);
+
+          integratedMediaRecorder.ondataavailable = (e) => {
+            integratedAudioChunks.push(e.data);
+          };
+
+          integratedMediaRecorder.onstop = () => {
+            const audioBlob = new Blob(integratedAudioChunks, {
+              type: "audio/wav",
+            });
+            sendVoiceChatRequest(audioBlob);
+          };
+
+          integratedMediaRecorder.start();
+          document.getElementById("integrated-record-button").disabled = true;
+          document.getElementById("integrated-stop-button").disabled = false;
+          document.getElementById("recording-status").textContent =
+            "녹음 중...";
+        });
+
+      // 통합 채팅 녹음 중지
+      document
+        .getElementById("integrated-stop-button")
+        .addEventListener("click", () => {
+          integratedMediaRecorder.stop();
+          document.getElementById("integrated-record-button").disabled = false;
+          document.getElementById("integrated-stop-button").disabled = true;
+          document.getElementById("recording-status").textContent = "녹음 완료";
+        });
+
+      // 채팅창에 메시지 추가
+      function addMessageToChat(sender, text) {
+        const chatMessages = document.getElementById(
+          "integrated-chat-messages"
+        );
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message message-${
+          sender === "user" ? "user" : "assistant"
+        }`;
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+        contentDiv.innerText = text;
+
+        const metaDiv = document.createElement("div");
+        metaDiv.className = "message-meta";
+
+        // 현재 시간 포맷팅
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(
+          now.getMinutes()
+        ).padStart(2, "0")}`;
+        metaDiv.innerText = timeStr;
+
+        messageDiv.appendChild(contentDiv);
+        messageDiv.appendChild(metaDiv);
+
+        chatMessages.appendChild(messageDiv);
+
+        // 스크롤을 최하단으로 이동
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // 채팅 기록에 메시지 추가
+        if (sender === "user") {
+          chatHistory.push({
+            role: "user",
+            content: text,
+          });
+        } else {
+          chatHistory.push({
+            role: "assistant",
+            content: text,
+          });
+        }
+      }
+
+      // 텍스트 대화 요청 전송
+      function sendChatRequest(text) {
+        const language = document.getElementById(
+          "integrated-chat-language"
+        ).value;
+        const endpoint = `/chat-conversation/${language}`;
+
+        document.getElementById("integrated-loading").style.display = "block";
+
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: text,
+            history: chatHistory,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("integrated-loading").style.display =
+              "none";
+
+            if (data.error) {
+              alert(`오류: ${data.error}`);
+            } else {
+              // 대화 응답을 채팅창에 추가
+              addMessageToChat("assistant", data.conversation);
+
+              // 어휘 학습 표시
+              if (data.vocabulary) {
+                document.getElementById(
+                  "integrated-vocabulary"
+                ).innerHTML = `<p>${data.vocabulary.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("integrated-vocabulary").innerHTML =
+                  "<p>어휘 정보가 없습니다.</p>";
+              }
+
+              // 예시 응답 표시
+              if (data.example_responses) {
+                document.getElementById(
+                  "integrated-examples"
+                ).innerHTML = `<p>${data.example_responses.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("integrated-examples").innerHTML =
+                  "<p>예시 응답이 없습니다.</p>";
+              }
+
+              // TTS 버튼 활성화
+              document.getElementById("integrated-tts-button").disabled = false;
+            }
+          })
+          .catch((error) => {
+            document.getElementById("integrated-loading").style.display =
+              "none";
+            alert(`오류: ${error.message}`);
+          });
+      }
+
+      // 음성 대화 요청 전송
+      function sendVoiceChatRequest(audioBlob) {
+        const language = document.getElementById(
+          "integrated-chat-language"
+        ).value;
+        const endpoint = `/stt-chat-conversation/${language}`;
+
+        document.getElementById("integrated-loading").style.display = "block";
+
+        const formData = new FormData();
+        formData.append("file", audioBlob);
+        formData.append("history", JSON.stringify(chatHistory));
+
+        fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("integrated-loading").style.display =
+              "none";
+
+            if (data.error) {
+              alert(`오류: ${data.error}`);
+            } else {
+              // 인식된 사용자 텍스트를 채팅창에 추가
+              addMessageToChat("user", data.input_text);
+
+              // 대화 응답을 채팅창에 추가
+              addMessageToChat("assistant", data.conversation);
+
+              // 어휘 학습 표시
+              if (data.vocabulary) {
+                document.getElementById(
+                  "integrated-vocabulary"
+                ).innerHTML = `<p>${data.vocabulary.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("integrated-vocabulary").innerHTML =
+                  "<p>어휘 정보가 없습니다.</p>";
+              }
+
+              // 예시 응답 표시
+              if (data.example_responses) {
+                document.getElementById(
+                  "integrated-examples"
+                ).innerHTML = `<p>${data.example_responses.replace(
+                  /\n/g,
+                  "<br>"
+                )}</p>`;
+              } else {
+                document.getElementById("integrated-examples").innerHTML =
+                  "<p>예시 응답이 없습니다.</p>";
+              }
+
+              // TTS 버튼 활성화
+              document.getElementById("integrated-tts-button").disabled = false;
+            }
+          })
+          .catch((error) => {
+            document.getElementById("integrated-loading").style.display =
+              "none";
+            alert(`오류: ${error.message}`);
+          });
+      }
+
+      // 통합 채팅 응답 TTS 변환
+      document
+        .getElementById("integrated-tts-button")
+        .addEventListener("click", () => {
+          // 마지막 AI 응답 메시지 찾기
+          const messages = document
+            .getElementById("integrated-chat-messages")
+            .querySelectorAll(".message-assistant");
+          if (messages.length === 0) {
+            alert("재생할 응답이 없습니다.");
+            return;
+          }
+
+          const lastMessage = messages[messages.length - 1];
+          const text = lastMessage
+            .querySelector(".message-content")
+            .innerText.trim();
+
+          if (!text) {
+            alert("변환할 대화 응답이 없습니다.");
+            return;
+          }
+
+          const language = document.getElementById(
+            "integrated-chat-language"
+          ).value;
+          const endpoint = `/tts/${language}`;
+
+          fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("음성 변환에 실패했습니다.");
+              }
+              return response.blob();
+            })
+            .then((blob) => {
+              const audioUrl = URL.createObjectURL(blob);
+              const audioPlayer = document.getElementById("integrated-audio");
+              audioPlayer.src = audioUrl;
+              audioPlayer.style.display = "block";
+              audioPlayer.play(); // 자동 재생
             })
             .catch((error) => {
               alert(`오류: ${error.message}`);

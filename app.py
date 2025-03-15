@@ -492,6 +492,303 @@ def cleanup_temp():
     
     return jsonify({'success': True, 'deleted_files': count})
 
+# 확장된 GPT 대화 API (영어 - 예시 응답 포함)
+@app.route('/chat-extended/english', methods=['POST'])
+def chat_extended_english():
+    data = request.get_json()
+    if 'text' not in data:
+        return jsonify({'error': '텍스트가 없습니다'}), 400
+    
+    text = data['text']
+    
+    try:
+        # GPT 서비스를 통해 확장 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_response_extended(text, language="en")
+        
+        # 응답 포맷팅 (대화 부분, 어휘 학습 부분, 예시 응답 부분 분리)
+        formatted_response = gpt.format_extended_response(response["answer"], language="en")
+        
+        return jsonify({
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"확장 Chat Error: {str(e)}")
+        return jsonify({'error': f'확장 대화 처리 실패: {str(e)}'}), 500
+
+# 확장된 GPT 대화 API (일본어 - 예시 응답 포함)
+@app.route('/chat-extended/japanese', methods=['POST'])
+def chat_extended_japanese():
+    data = request.get_json()
+    if 'text' not in data:
+        return jsonify({'error': '텍스트가 없습니다'}), 400
+    
+    text = data['text']
+    
+    try:
+        # GPT 서비스를 통해 확장 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_response_extended(text, language="ja")
+        
+        # 응답 포맷팅 (대화 부분, 어휘 학습 부분, 예시 응답 부분 분리)
+        formatted_response = gpt.format_extended_response(response["answer"], language="ja")
+        
+        return jsonify({
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"확장 Chat Error: {str(e)}")
+        return jsonify({'error': f'확장 대화 처리 실패: {str(e)}'}), 500
+
+# 확장된 STT+GPT 통합 API (영어 - 예시 응답 포함)
+@app.route('/stt-chat-extended/english', methods=['POST'])
+def stt_chat_extended_english():
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다'}), 400
+    
+    audio_file = request.files['file']
+    
+    # 임시 파일로 저장
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
+    audio_file.save(temp_file.name)
+    temp_file.close()
+    
+    try:
+        # 1. Whisper로 영어 음성 인식
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(temp_file.name, language="en")
+        recognized_text = result["text"]
+        
+        # 2. GPT 서비스를 통해 확장 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_response_extended(recognized_text, language="en")
+        
+        # 3. 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="en")
+        
+        return jsonify({
+            'input_text': recognized_text,
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"확장 STT-Chat Error: {str(e)}")
+        return jsonify({'error': f'확장 음성 대화 처리 실패: {str(e)}'}), 500
+    finally:
+        os.unlink(temp_file.name)  # 임시 파일 삭제
+
+# 확장된 STT+GPT 통합 API (일본어 - 예시 응답 포함)
+@app.route('/stt-chat-extended/japanese', methods=['POST'])
+def stt_chat_extended_japanese():
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다'}), 400
+    
+    audio_file = request.files['file']
+    
+    # 임시 파일로 저장
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
+    audio_file.save(temp_file.name)
+    temp_file.close()
+    
+    try:
+        # 1. Whisper로 일본어 음성 인식
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(temp_file.name, language="ja")
+        recognized_text = result["text"]
+        
+        # 2. GPT 서비스를 통해 확장 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_response_extended(recognized_text, language="ja")
+        
+        # 3. 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="ja")
+        
+        return jsonify({
+            'input_text': recognized_text,
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"확장 STT-Chat Error: {str(e)}")
+        return jsonify({'error': f'확장 음성 대화 처리 실패: {str(e)}'}), 500
+    finally:
+        os.unlink(temp_file.name)  # 임시 파일 삭제
+
+# 대화 기록이 포함된 텍스트 채팅 API (영어)
+@app.route('/chat-conversation/english', methods=['POST'])
+def chat_conversation_english():
+    data = request.get_json()
+    if 'text' not in data:
+        return jsonify({'error': '텍스트가 없습니다'}), 400
+    
+    text = data['text']
+    chat_history = data.get('history', [])
+    
+    try:
+        # GPT 서비스를 통해 대화 기록 포함 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_conversation(text, chat_history, language="en")
+        
+        # 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="en")
+        
+        return jsonify({
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"대화 기록 Chat Error: {str(e)}")
+        return jsonify({'error': f'대화 기록 처리 실패: {str(e)}'}), 500
+
+# 대화 기록이 포함된 텍스트 채팅 API (일본어)
+@app.route('/chat-conversation/japanese', methods=['POST'])
+def chat_conversation_japanese():
+    data = request.get_json()
+    if 'text' not in data:
+        return jsonify({'error': '텍스트가 없습니다'}), 400
+    
+    text = data['text']
+    chat_history = data.get('history', [])
+    
+    try:
+        # GPT 서비스를 통해 대화 기록 포함 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_conversation(text, chat_history, language="ja")
+        
+        # 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="ja")
+        
+        return jsonify({
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"대화 기록 Chat Error: {str(e)}")
+        return jsonify({'error': f'대화 기록 처리 실패: {str(e)}'}), 500
+
+# 대화 기록이 포함된 음성 채팅 API (영어)
+@app.route('/stt-chat-conversation/english', methods=['POST'])
+def stt_chat_conversation_english():
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다'}), 400
+    
+    audio_file = request.files['file']
+    
+    # 채팅 기록 가져오기
+    chat_history_json = request.form.get('history', '[]')
+    try:
+        chat_history = json.loads(chat_history_json)
+    except:
+        chat_history = []
+    
+    # 임시 파일로 저장
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
+    audio_file.save(temp_file.name)
+    temp_file.close()
+    
+    try:
+        # 1. Whisper로 영어 음성 인식
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(temp_file.name, language="en")
+        recognized_text = result["text"]
+        
+        # 2. GPT 서비스를 통해 대화 기록 포함 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_conversation(recognized_text, chat_history, language="en")
+        
+        # 3. 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="en")
+        
+        return jsonify({
+            'input_text': recognized_text,
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"대화 기록 STT-Chat Error: {str(e)}")
+        return jsonify({'error': f'대화 기록 음성 처리 실패: {str(e)}'}), 500
+    finally:
+        os.unlink(temp_file.name)  # 임시 파일 삭제
+
+# 대화 기록이 포함된 음성 채팅 API (일본어)
+@app.route('/stt-chat-conversation/japanese', methods=['POST'])
+def stt_chat_conversation_japanese():
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다'}), 400
+    
+    audio_file = request.files['file']
+    
+    # 채팅 기록 가져오기
+    chat_history_json = request.form.get('history', '[]')
+    try:
+        chat_history = json.loads(chat_history_json)
+    except:
+        chat_history = []
+    
+    # 임시 파일로 저장
+    temp_file = tempfile.NamedTemporaryFile(dir=TEMP_DIR, delete=False, suffix='.wav')
+    audio_file.save(temp_file.name)
+    temp_file.close()
+    
+    try:
+        # 1. Whisper로 일본어 음성 인식
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(temp_file.name, language="ja")
+        recognized_text = result["text"]
+        
+        # 2. GPT 서비스를 통해 대화 기록 포함 응답 얻기
+        gpt = get_gpt_service()
+        response = gpt.get_chat_conversation(recognized_text, chat_history, language="ja")
+        
+        # 3. 응답 포맷팅
+        formatted_response = gpt.format_extended_response(response["answer"], language="ja")
+        
+        return jsonify({
+            'input_text': recognized_text,
+            'conversation': formatted_response["conversation"],
+            'vocabulary': formatted_response["vocabulary"],
+            'example_responses': formatted_response["example_responses"],
+            'full_response': response["answer"],
+            'model': response["model"],
+            'usage': response["usage"]
+        })
+    except Exception as e:
+        app.logger.error(f"대화 기록 STT-Chat Error: {str(e)}")
+        return jsonify({'error': f'대화 기록 음성 처리 실패: {str(e)}'}), 500
+    finally:
+        os.unlink(temp_file.name)  # 임시 파일 삭제
+
+
 # 플라스크 활용 시 활성화
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=5000, debug=True)
