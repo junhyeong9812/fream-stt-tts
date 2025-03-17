@@ -33,6 +33,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+temp/
 
 # 유닛 테스트 / 커버리지 보고서
 htmlcov/

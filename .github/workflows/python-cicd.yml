@@ -10,20 +10,45 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # 1) Checkout
       - name: Check out the repository
         uses: actions/checkout@v3
 
-      # 2) Login to GHCR
-      - name: Log in to GitHub Container Registry
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-scientific.txt
+          pip install -r requirements-utils.txt
+          pip install -r requirements-core.txt
+          pip install -r requirements-openai.txt
+          pip install -r requirements-audio.txt
+          pip install -r requirements-ml.txt
+          pip install -r requirements-server.txt
+
+      - name: Login to GitHub Container Registry
         run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
-      # 3) Docker build
       - name: Build Docker Image
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          FLASK_APP: app.py
+          FLASK_ENV: development
+          DEBUG: true
+          TEMP_FILES_LIFETIME: 3600
         run: |
-          docker build -t ghcr.io/junhyeong9812/fream-stt-tts:latest .
+          docker build \
+            --build-arg OPENAI_API_KEY=$OPENAI_API_KEY \
+            --build-arg OPENAI_MODEL=$OPENAI_MODEL \
+            --build-arg FLASK_APP=$FLASK_APP \
+            --build-arg FLASK_ENV=$FLASK_ENV \
+            --build-arg DEBUG=$DEBUG \
+            --build-arg TEMP_FILES_LIFETIME=$TEMP_FILES_LIFETIME \
+            -t ghcr.io/junhyeong9812/fream-stt-tts:latest .
 
-      # 4) Docker push
       - name: Push Docker Image
         run: |
           docker push ghcr.io/junhyeong9812/fream-stt-tts:latest
@@ -35,10 +60,18 @@ jobs:
     steps:
       - name: SSH to EC2
         uses: appleboy/ssh-action@v0.1.8
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          FLASK_APP: app.py
+          FLASK_ENV: development
+          DEBUG: true
+          TEMP_FILES_LIFETIME: 3600
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: OPENAI_API_KEY,OPENAI_MODEL,FLASK_APP,FLASK_ENV,DEBUG,TEMP_FILES_LIFETIME
           script: |
             cd /home/ubuntu/fream-back/docker/prod
             docker-compose -f docker-compose.prod.yml pull stt_tts
