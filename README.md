@@ -34,6 +34,10 @@
 - **자연어 처리**: OpenAI GPT API
 - **프론트엔드**: HTML, CSS, JavaScript
 
+## 프로젝트 아키택처
+
+![image.png](attachment:6994dfe7-15bf-47ec-a54f-8598eaa91434:image.png)
+
 ## 프로젝트 구조
 
 ```
@@ -142,7 +146,6 @@ flask run
 - [음성 합성(TTS) 서비스](docs/service/TTS_Service.md)
 - [GPT 서비스](docs/service/GPT_Service.md)
 - [번역 서비스](docs/service/Translation_Service.md)
-
 
 ## 아키텍처 및 설계
 
