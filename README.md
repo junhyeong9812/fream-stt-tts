@@ -36,7 +36,8 @@
 
 ## 프로젝트 아키택처
 
-![image.png](attachment:6994dfe7-15bf-47ec-a54f-8598eaa91434:image.png)
+![image](https://github.com/user-attachments/assets/d70a5a70-4c92-46da-aae4-e1843fe54ab6)
+
 
 ## 프로젝트 구조
 
