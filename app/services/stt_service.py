@@ -21,8 +21,16 @@ def custom_load(*args, **kwargs):
 # torch.load 함수 오버라이드
 torch.load = custom_load
 
-# 안전한 클래스 목록에 필요한 클래스들 추가
-torch.serialization.add_safe_globals([RAdam, defaultdict, OrderedDict, dict, builtins.dict])
+# 안전한 클래스 목록에 필요한 클래스들 추가 (PyTorch 버전 호환성 처리)
+try:
+    # 이전 버전 PyTorch 호환성
+    if hasattr(torch.serialization, 'add_safe_globals'):
+        torch.serialization.add_safe_globals([RAdam, defaultdict, OrderedDict, dict, builtins.dict])
+    else:
+        # 최신 PyTorch 버전에서는 이 함수가 필요 없을 수 있음
+        logger.info("torch.serialization.add_safe_globals 함수가 없습니다. 최신 PyTorch 버전을 사용 중입니다.")
+except Exception as e:
+    logger.warning(f"안전한 클래스 설정 중 오류 발생: {str(e)}. 모델 로딩에는 영향이 없을 수 있습니다.")
 
 # 전역 변수로 모델 캐싱
 _whisper_model = None

@@ -106,7 +106,7 @@ function addMessageToChat(sender, text) {
 // 텍스트 대화 요청 전송
 function sendChatRequest(text) {
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/chat-conversation/${language}`;
+  const endpoint = `/talk/chat-conversation/${language}`;
 
   document.getElementById("integrated-loading").style.display = "block";
 
@@ -166,7 +166,7 @@ function sendChatRequest(text) {
 // 음성 대화 요청 전송
 function sendVoiceChatRequest(audioBlob) {
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/stt-chat-conversation/${language}`;
+  const endpoint = `/talk/stt-chat-conversation/${language}`;
 
   document.getElementById("integrated-loading").style.display = "block";
 
@@ -244,7 +244,7 @@ function playIntegratedResponse() {
   }
 
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",

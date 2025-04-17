@@ -7,7 +7,7 @@ function startTextChat() {
   }
 
   const language = document.getElementById("chat-language").value;
-  const endpoint = `/chat-extended/${language}`;
+  const endpoint = `/talk/chat-extended/${language}`;
 
   document.getElementById("loading-chat").style.display = "block";
   document.getElementById("chat-response").innerHTML = "";
@@ -77,7 +77,7 @@ function playChatResponse() {
   }
 
   const language = document.getElementById("chat-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",

@@ -174,7 +174,7 @@ function sendAudioToServer(audioBlob) {
   formData.append("file", audioBlob);
 
   const language = document.getElementById("stt-language").value;
-  const endpoint = `/stt/${language}`;
+  const endpoint = `/talk/stt/${language}`;
 
   document.getElementById("stt-result").value = "처리 중...";
 
@@ -204,7 +204,7 @@ function convertToSpeech() {
   }
 
   const language = document.getElementById("tts-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",
@@ -239,7 +239,7 @@ function startTextChat() {
   }
 
   const language = document.getElementById("chat-language").value;
-  const endpoint = `/chat-extended/${language}`;
+  const endpoint = `/talk/chat-extended/${language}`;
 
   document.getElementById("loading-chat").style.display = "block";
   document.getElementById("chat-response").innerHTML = "";
@@ -309,7 +309,7 @@ function playChatResponse() {
   }
 
   const language = document.getElementById("chat-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",
@@ -379,7 +379,7 @@ function sendFullConversation(audioBlob) {
   formData.append("file", audioBlob);
 
   const language = document.getElementById("full-language").value;
-  const endpoint = `/stt-chat-extended/${language}`;
+  const endpoint = `/talk/stt-chat-extended/${language}`;
 
   document.getElementById("loading-full").style.display = "block";
   document.getElementById("full-input-text").innerHTML = "";
@@ -455,7 +455,7 @@ function playFullResponse() {
   }
 
   const language = document.getElementById("full-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",
@@ -589,7 +589,7 @@ function addMessageToChat(sender, text) {
 // 텍스트 대화 요청 전송
 function sendChatRequest(text) {
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/chat-conversation/${language}`;
+  const endpoint = `/talk/chat-conversation/${language}`;
 
   document.getElementById("integrated-loading").style.display = "block";
 
@@ -649,7 +649,7 @@ function sendChatRequest(text) {
 // 음성 대화 요청 전송
 function sendVoiceChatRequest(audioBlob) {
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/stt-chat-conversation/${language}`;
+  const endpoint = `/talk/stt-chat-conversation/${language}`;
 
   document.getElementById("integrated-loading").style.display = "block";
 
@@ -727,7 +727,7 @@ function playIntegratedResponse() {
   }
 
   const language = document.getElementById("integrated-chat-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",

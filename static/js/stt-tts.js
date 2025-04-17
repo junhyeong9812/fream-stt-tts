@@ -42,7 +42,7 @@ function sendAudioToServer(audioBlob) {
   formData.append("file", audioBlob);
 
   const language = document.getElementById("stt-language").value;
-  const endpoint = `/stt/${language}`;
+  const endpoint = `/talk/stt/${language}`;
 
   document.getElementById("stt-result").value = "처리 중...";
 
@@ -72,7 +72,7 @@ function convertToSpeech() {
   }
 
   const language = document.getElementById("tts-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",

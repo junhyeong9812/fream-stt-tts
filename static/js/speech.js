@@ -42,7 +42,7 @@ function sendFullConversation(audioBlob) {
   formData.append("file", audioBlob);
 
   const language = document.getElementById("full-language").value;
-  const endpoint = `/stt-chat-extended/${language}`;
+  const endpoint = `/talk/stt-chat-extended/${language}`;
 
   document.getElementById("loading-full").style.display = "block";
   document.getElementById("full-input-text").innerHTML = "";
@@ -118,7 +118,7 @@ function playFullResponse() {
   }
 
   const language = document.getElementById("full-language").value;
-  const endpoint = `/tts/${language}`;
+  const endpoint = `/talk/tts/${language}`;
 
   fetch(endpoint, {
     method: "POST",
