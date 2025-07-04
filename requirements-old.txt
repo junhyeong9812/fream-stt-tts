@@ -9,8 +9,8 @@ click==8.1.7
 openai==1.3.0
 python-dotenv==1.0.0
 
-# Audio Processing - 최신 버전으로 업그레이드
-openai-whisper
+# Audio Processing
+openai-whisper==20230918
 pydub==0.25.1
 soundfile==0.12.1
 
