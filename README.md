@@ -159,18 +159,6 @@ flask run
 
 [아키텍처 설계 상세 문서](docs/Architecture.md)
 
-## 기여 방법
-
-1. 이 저장소를 포크합니다.
-2. 새 기능 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 커밋합니다 (`git commit -m 'Add some amazing feature'`)
-4. 브랜치에 푸시합니다 (`git push origin feature/amazing-feature`)
-5. Pull Request를 제출합니다.
-
-## 라이센스
-
-이 프로젝트는 MIT 라이센스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
 ## 주의사항
 
 1. **리소스 요구사항**: Whisper와 TTS 모델은 상당한 메모리를 사용합니다. 충분한 RAM이 필요합니다.
